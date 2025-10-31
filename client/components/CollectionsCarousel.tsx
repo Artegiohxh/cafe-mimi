@@ -269,7 +269,7 @@ export default function CollectionsCarousel({ collections }: CollectionsCarousel
           </div>
           {collection.descriptionPosition === 'bottom' && (
             <div className={`absolute bottom-6 left-6 md:bottom-8 md:left-8 ${collection.descriptionClassName || ''}`}>
-              <p className="font-display font-bold italic text-[#333F48] text-base md:text-lg lg:text-[24px] lg:leading-[30px] tracking-[-0.04em] lg:tracking-[-0.96px] max-w-[240px] md:max-w-[285px]">
+              <p className={`font-display font-bold italic text-[#333F48] text-base md:text-lg lg:text-[24px] lg:leading-[30px] tracking-[-0.04em] lg:tracking-[-0.96px] ${collection.id === 'super-fruit' ? 'w-full' : 'max-w-[240px] md:max-w-[285px]'}`}>
                 {collection.description}
               </p>
             </div>

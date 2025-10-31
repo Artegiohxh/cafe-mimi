@@ -224,7 +224,7 @@ export default function Index() {
               image: '/images/collections/Super Fruit.png',
               alt: 'Super Fruit collection',
               descriptionPosition: 'bottom',
-              descriptionClassName: 'lg:bottom-[132px] max-w-[280px] md:max-w-[400px] lg:max-w-[512px]',
+              descriptionClassName: 'left-8 right-8 bottom-8',
             },
             {
               id: 'sun',
@@ -233,7 +233,7 @@ export default function Index() {
               image: '/images/collections/Sun.png',
               alt: 'Sun collection',
               descriptionPosition: 'top-right',
-              descriptionClassName: 'lg:top-[111px] max-w-[240px] md:max-w-[280px] lg:max-w-[302px]',
+              descriptionClassName: 'lg:top-[80px] max-w-[240px] md:max-w-[280px] lg:max-w-[302px]',
             },
             {
               id: 'your-face-your-case',
@@ -242,7 +242,7 @@ export default function Index() {
               image: '/images/collections/Your Face Your Case.png',
               alt: 'Your Face Your Case collection',
               descriptionPosition: 'bottom-right',
-              descriptionClassName: 'lg:bottom-[132px] max-w-[240px] md:max-w-[280px] lg:max-w-[302px]',
+              descriptionClassName: 'lg:bottom-[32px] max-w-[240px] md:max-w-[280px] lg:max-w-[302px]',
             },
           ]}
         />
