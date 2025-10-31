@@ -1,7 +1,9 @@
 [build]
-  command = "npm run build:client"
-  functions = "netlify/functions"
+  command = "pnpm build:client"
   publish = "dist/spa"
+  
+[build.environment]
+  NODE_VERSION = "18"
 
 
 [functions]
