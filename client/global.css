@@ -1,0 +1,384 @@
+/** @import must precede all other statements */
+@font-face {
+  font-family: 'RF Dewi Extended';
+  src: url('/fonts/RFDewiExtended-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Axiforma';
+  src: url('/fonts/Axiforma-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Cafe Mimi Brand Theme
+   * Colors from Figma design
+  */
+  :root {
+    --background: 277 76% 84%;
+    --foreground: 0 0% 7%;
+
+    --card: 277 76% 84%;
+    --card-foreground: 0 0% 7%;
+
+    --popover: 277 76% 84%;
+    --popover-foreground: 0 0% 7%;
+
+    --primary: 0 0% 7%;
+    --primary-foreground: 277 76% 84%;
+
+    --secondary: 277 48% 74%;
+    --secondary-foreground: 0 0% 7%;
+
+    --muted: 277 48% 74%;
+    --muted-foreground: 0 0% 30%;
+
+    --accent: 63 100% 63%;
+    --accent-foreground: 0 0% 7%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 0 0% 7%;
+    --input: 0 0% 7%;
+    --ring: 63 100% 63%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 277 76% 84%;
+    --sidebar-foreground: 0 0% 7%;
+    --sidebar-primary: 0 0% 7%;
+    --sidebar-primary-foreground: 277 76% 84%;
+    --sidebar-accent: 277 48% 74%;
+    --sidebar-accent-foreground: 0 0% 7%;
+    --sidebar-border: 0 0% 7%;
+    --sidebar-ring: 63 100% 63%;
+    
+    /* Brand colors */
+    --brand-purple: 277 76% 84%;
+    --brand-purple-dark: 277 48% 74%;
+    --brand-yellow: 63 100% 63%;
+    --brand-black: 0 0% 7%;
+  }
+
+  .dark {
+    --background: 0 0% 7%;
+    --foreground: 277 76% 84%;
+
+    --card: 0 0% 7%;
+    --card-foreground: 277 76% 84%;
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 277 76% 84%;
+
+    --primary: 277 76% 84%;
+    --primary-foreground: 0 0% 7%;
+
+    --secondary: 277 48% 74%;
+    --secondary-foreground: 0 0% 7%;
+
+    --muted: 277 48% 74%;
+    --muted-foreground: 277 76% 60%;
+
+    --accent: 63 100% 63%;
+    --accent-foreground: 0 0% 7%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 277 76% 84%;
+    --input: 277 76% 84%;
+    --ring: 63 100% 63%;
+    
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 277 76% 84%;
+    --sidebar-primary: 63 100% 63%;
+    --sidebar-primary-foreground: 0 0% 7%;
+    --sidebar-accent: 277 48% 74%;
+    --sidebar-accent-foreground: 0 0% 7%;
+    --sidebar-border: 277 76% 84%;
+    --sidebar-ring: 63 100% 63%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Axiforma', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  pre,
+  code {
+    overflow-x: auto;
+    white-space: pre;
+  }
+}
+
+@layer utilities {
+  @keyframes scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-33.333%);
+    }
+  }
+
+  .animate-scroll {
+    animation: scroll 20s linear infinite;
+  }
+
+  /* Figma Grid System: 6 columns, 64px margin, 32px gutter */
+  .grid-figma {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 32px;
+    padding-left: 64px;
+    padding-right: 64px;
+  }
+
+  /* Helper for visual grid overlay during development */
+  .debug-grid {
+    position: relative;
+  }
+
+  .debug-grid::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: 
+      repeating-linear-gradient(
+        to right,
+        transparent 0,
+        transparent calc((100% - 128px) / 6 - 32px),
+        rgba(255, 0, 0, 0.1) calc((100% - 128px) / 6 - 32px),
+        rgba(255, 0, 0, 0.1) calc((100% - 128px) / 6)
+      );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* SVG text с обводкой и скругленными углами */
+  svg text {
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+
+  /* Адаптивная обводка для текстов */
+  @media (max-width: 768px) {
+    div[style*="WebkitTextStrokeWidth"] {
+      -webkit-text-stroke-width: 4px !important;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    div[style*="WebkitTextStrokeWidth"] {
+      -webkit-text-stroke-width: 8px !important;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    div[style*="WebkitTextStrokeWidth"] {
+      -webkit-text-stroke-width: 13px !important;
+    }
+  }
+
+  /* Noise эффект из Figma для всей страницы */
+  .noise-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.10;
+    mix-blend-mode: multiply;
+    will-change: transform;
+    transform: translateZ(0); /* GPU acceleration */
+    contain: layout style paint;
+  }
+  
+  .noise-overlay canvas {
+    display: block;
+    transform: translateZ(0); /* GPU acceleration */
+  }
+
+  /* About image container - 3D эффект через CSS переменные */
+  .about-image-container {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+    overflow: visible;
+    contain: layout style;
+  }
+
+  .about-image {
+    transform-style: preserve-3d;
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translate3d(0, 0, 0); /* GPU acceleration */
+    contain: layout style;
+  }
+
+  /* Collections carousel */
+  .collections-carousel {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  
+  /* Разрешаем выход элементов за границы секции с каруселью */
+  section:has(.collections-carousel) {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    clip-path: none !important;
+    contain: none !important;
+  }
+  
+  /* Убираем overflow у всех контейнеров до карусели */
+  section:has(.collections-carousel) > * {
+    overflow-y: visible !important;
+  }
+  
+  /* Основной контейнер страницы - разрешаем overflow для карусели */
+  div:has(.collections-carousel),
+  div:has(section:has(.collections-carousel)) {
+    overflow-y: visible !important;
+  }
+  
+  /* Основной контейнер страницы */
+  body {
+    overflow-x: clip !important;
+    overflow-y: auto !important;
+  }
+  
+  html {
+    overflow-x: clip !important;
+    overflow-y: auto !important;
+  }
+  
+  /* #root контейнер */
+  #root {
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+  }
+
+  .collections-carousel::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hero section wrapper - базовая ширина 1920px */
+  .hero-section-wrapper {
+    position: relative;
+  }
+
+  .hero-section-inner {
+    position: relative;
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
+    min-height: 100%;
+    height: 100%;
+  }
+
+  /* Вектор - позиционирование относительно базового разрешения 1920px */
+  .hero-vector {
+    position: absolute;
+    right: -5%;
+    top: -3%;
+    width: 45%;
+    height: auto;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @media (min-width: 768px) {
+    .hero-vector {
+      right: 0%;
+      top: -5%;
+      width: 42%;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .hero-vector {
+      right: 4%;
+      top: -5%;
+      width: 50%;
+      transform: translateX(200px);
+    }
+  }
+
+  /* Контейнер модели - адаптивный размер, позиционирование относительно hero-секции */
+  .model-container {
+    width: 48vw;
+    min-width: 400px;
+    right: 12%;
+    top: 40%;
+    transform: translateY(-50%);
+    transform-origin: center center;
+    z-index: 10000;
+    position: absolute;
+  }
+
+  @media (min-width: 768px) {
+    .model-container {
+      right: 16%;
+      top: 40%;
+      transform: translateY(-50%);
+      transform-origin: center center;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .model-container {
+      right: 21%;
+      top: 40%;
+      transform: translateY(-50%) translateX(0px);
+      transform-origin: center center;
+    }
+  }
+
+  /* Для экранов больше 1920px - пропорционально масштабируем модель относительно центра */
+  @media (min-width: 1921px) {
+    .hero-section-inner {
+      transform: scale(calc(1920 / 100vw));
+      transform-origin: top center;
+      width: 1920px;
+      max-width: none;
+    }
+    
+    .model-container {
+      /* Масштабируем модель относительно её центра, сохраняя позицию справа */
+      transform: translateY(-50%) translateX(-10px) scale(calc(1920 / 100vw));
+      transform-origin: center center;
+    }
+  }
+
+}
