@@ -25,3 +25,7 @@ dist-ssr
 
 .config/
 !.env
+
+# 3D models - оставляем только сжатые
+public/models/bottlemodel.glb
+public/models/bottlemodel-draco.glb
