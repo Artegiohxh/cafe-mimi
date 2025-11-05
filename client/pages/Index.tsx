@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import NoiseOverlay from "@/components/NoiseOverlay";
 import Product3DModel from "@/components/Product3DModel";
+import News from "@/components/News";
 import CollectionsCarousel from "@/components/CollectionsCarousel";
 
 export default function Index() {
@@ -36,13 +37,34 @@ export default function Index() {
     
     animationFrameRef.current = requestAnimationFrame(animate);
   };
-  
+
   useEffect(() => {
-    animationFrameRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+    // Запускаем анимацию только когда блок в вьюпорте
+    const el = containerRef.current;
+    if (!el) return;
+    const start = () => {
+      if (animationFrameRef.current == null) {
+        animationFrameRef.current = requestAnimationFrame(animate);
       }
+    };
+    const stop = () => {
+      if (animationFrameRef.current != null) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+    const io = new IntersectionObserver((entries) => {
+      const vis = entries[0]?.isIntersecting;
+      if (vis) start(); else stop();
+    }, { threshold: 0.05 });
+    io.observe(el);
+    // Фолбэк на фокус вкладки
+    const onVis = () => { if (document.visibilityState === 'visible') start(); else stop(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      io.disconnect();
+      document.removeEventListener('visibilitychange', onVis);
+      stop();
     };
   }, []);
   
@@ -63,25 +85,27 @@ export default function Index() {
   };
 
   useEffect(() => {
+    // Троттлим скролл rAF'ом, чтобы не триггерить React чаще кадра
+    let raf: number | null = null;
     const handleScroll = () => {
-      if (!heroSectionRef.current) return;
-      
+      if (raf !== null) return;
+      raf = requestAnimationFrame(() => {
+        if (!heroSectionRef.current) { raf = null; return; }
       const heroHeight = heroSectionRef.current.offsetHeight;
       const heroTop = heroSectionRef.current.offsetTop;
       const scrollY = window.scrollY;
-      
-      // Вычисляем насколько проскроллили внутри hero секции
       const scrollInHero = Math.max(0, scrollY - heroTop);
-      
-      // Нормализуем позицию скролла от 0 до 1 (где 1 = полностью проскроллили hero секцию)
       const normalized = Math.min(scrollInHero / heroHeight, 1);
       setScrollPosition(normalized);
+        raf = null;
+      });
     };
-
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Вызываем сразу для начальной позиции
-
-    return () => window.removeEventListener('scroll', handleScroll);
+    handleScroll();
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (raf !== null) cancelAnimationFrame(raf);
+    };
   }, []);
 
   return (
@@ -168,22 +192,22 @@ export default function Index() {
               </h2>
               <p className="font-display font-bold italic text-[#333F48] text-lg md:text-xl lg:text-[24px] lg:leading-[30px] tracking-[-0.04em] lg:tracking-[-0.96px] max-w-[576px]">
                 Каждый продукт cafe mimi наполнен любовью до краев — чтобы ты
-                ощущала себя особенной
-              </p>
-            </div>
+              ощущала себя особенной
+            </p>
+              </div>
 
             <div className="flex items-end gap-4 md:gap-6">
               <div className="font-display font-bold italic text-[#333F48] text-lg md:text-xl lg:text-[24px] lg:leading-[30px] tracking-[-0.04em] lg:tracking-[-0.96px]">
-                Коллекции
-                <br />
-                продуктов
-              </div>
-              <img
+                  Коллекции
+                  <br />
+                  продуктов
+                </div>
+                <img
                 src="https://api.builder.io/api/v1/image/assets/TEMP/5359fd0613cd08a5b3f1699f17691bd11cb0cf12?width=230"
-                alt="arrow"
+                  alt="arrow"
                 className="w-20 md:w-24 lg:w-[115px] h-auto"
-                style={{ strokeWidth: "4px", stroke: "#333F48" }}
-              />
+                style={{ strokeWidth: "4px", stroke: "#333F48", transform: "translateY(30px)" }}
+                />
             </div>
           </div>
         </div>
@@ -247,6 +271,8 @@ export default function Index() {
           ]}
         />
       </section>
+
+      <News />
     </div>
   );
 }

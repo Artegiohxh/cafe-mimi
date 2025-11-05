@@ -24,6 +24,7 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "gsap": "^3.13.0",
+    "locomotive-scroll": "^4.1.4",
     "zod": "^3.25.76"
   },
   "devDependencies": {

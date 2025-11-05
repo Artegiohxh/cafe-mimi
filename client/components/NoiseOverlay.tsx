@@ -1,99 +1,89 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
+// Лёгкий шум: генерируем маленький тайл 128x128 один раз и повторяем фоном
 export default function NoiseOverlay() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isFixed, setIsFixed] = useState(false);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
     const container = containerRef.current;
-    if (!canvas || !container) return;
+    if (!container) return;
 
+    const size = 128; // маленький тайл
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Функция для обновления размеров canvas
-    const updateCanvas = () => {
-      // Используем высоту документа, чтобы покрыть всю страницу
-      const width = window.innerWidth;
-      const height = Math.max(
-        document.documentElement.scrollHeight,
-        document.body.scrollHeight,
-        document.documentElement.offsetHeight,
-        document.body.offsetHeight,
-        document.documentElement.clientHeight
-      );
-      
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Обновляем размер контейнера
-      container.style.width = `${width}px`;
-      container.style.height = `${height}px`;
-      
-      // Генерируем шум согласно параметрам из Figma
-      // Noise size: 0.5, Density: 100%, Color: #000000, Opacity: 12%
-      const imageData = ctx.createImageData(canvas.width, canvas.height);
-      const data = imageData.data;
-      
-      // Генерируем монохромный шум
-      for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-          const index = (y * canvas.width + x) * 4;
-          
-          const noise = Math.random();
-          const value = Math.floor(noise * 255);
-          
-          data[index] = value;     // R
-          data[index + 1] = value; // G
-          data[index + 2] = value; // B
-          data[index + 3] = 255;   // Alpha (opacity применяется через CSS)
-        }
-      }
+    const imageData = ctx.createImageData(size, size);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const v = (Math.random() * 255) | 0;
+      data[i] = v;
+      data[i + 1] = v;
+      data[i + 2] = v;
+      data[i + 3] = 255;
+    }
+    ctx.putImageData(imageData, 0, 0);
 
-      ctx.putImageData(imageData, 0, 0);
+    const url = canvas.toDataURL('image/png');
+    container.style.backgroundImage = `url(${url})`;
+    container.style.backgroundRepeat = 'repeat';
+    container.style.backgroundSize = 'auto'; // нативное тайлинг
+
+    // Обновляем высоту при изменении размера окна или скролле (только при необходимости)
+    let rafId: number | null = null;
+    const updateHeight = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        const docHeight = Math.max(
+          document.body.scrollHeight,
+          document.documentElement.scrollHeight
+        );
+        container.style.height = `${docHeight}px`;
+        rafId = null;
+      });
     };
 
-    updateCanvas();
+    // Инициализируем высоту
+    updateHeight();
     
-    // Обновляем при изменении размера окна и при скролле (если контент динамический)
-    const handleResize = () => updateCanvas();
-    window.addEventListener('resize', handleResize);
-    
-    // Используем MutationObserver для отслеживания изменений высоты документа
-    // Throttle для уменьшения частоты обновлений
-    let mutationTimeout: number | null = null;
-    const observer = new MutationObserver(() => {
-      if (mutationTimeout !== null) return;
-      mutationTimeout = window.setTimeout(() => {
-        updateCanvas();
-        mutationTimeout = null;
-      }, 500); // Обновляем максимум раз в 500ms
-    });
-    
-    observer.observe(document.body, {
-      childList: true,
-      subtree: false, // Только прямые дочерние элементы
-      attributes: false // Не отслеживаем изменения атрибутов
-    });
+    // Обновляем только при ресайзе окна (редкое событие)
+    window.addEventListener('resize', updateHeight, { passive: true });
+
+    const handleNewsPinToggle: EventListener = (event) => {
+      const customEvent = event as CustomEvent<{ isPinned: boolean }>;
+      setIsFixed(Boolean(customEvent.detail?.isPinned));
+    };
+
+    window.addEventListener("news-pin-toggle", handleNewsPinToggle);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      observer.disconnect();
+      window.removeEventListener('resize', updateHeight);
+      window.removeEventListener("news-pin-toggle", handleNewsPinToggle);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
 
   return (
-    <div ref={containerRef} className="noise-overlay">
-      <canvas
-        ref={canvasRef}
-        style={{
-          display: 'block',
-          width: '100%',
-          height: '100%',
-        }}
-      />
-    </div>
+    <div
+      ref={containerRef}
+      style={{
+        position: isFixed ? 'fixed' : 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        width: '100%',
+        pointerEvents: 'none',
+        opacity: 0.06,
+        mixBlendMode: 'normal',
+        zIndex: 20000,
+        willChange: 'transform',
+        transform: 'translateZ(0)', // GPU ускорение
+        contain: 'layout style paint', // Оптимизация рендеринга
+      }}
+    />
   );
 }
 

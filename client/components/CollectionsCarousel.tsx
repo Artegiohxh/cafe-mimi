@@ -26,7 +26,7 @@ export default function CollectionsCarousel({ collections }: CollectionsCarousel
   const rafIdRef = useRef<number | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Простое обновление трансформаций с легкой перспективой
+  // Обновление трансформаций: имитируем движение карточек по дуге
   const updateCardTransforms = () => {
     if (!containerRef.current) return;
 
@@ -39,40 +39,56 @@ export default function CollectionsCarousel({ collections }: CollectionsCarousel
 
       const cardRect = card.getBoundingClientRect();
       const cardCenterX = cardRect.left + cardRect.width / 2;
-      
-      const distanceFromCenter = cardCenterX - containerCenterX;
-      const normalizedDistance = Math.min(1, Math.abs(distanceFromCenter) / maxDistance);
-      
-      // Легкая перспектива - небольшой поворот и масштаб
-      const rotateY = (distanceFromCenter / maxDistance) * 8; // До 8 градусов
-      const scale = 0.95 + normalizedDistance * 0.05; // От 0.95 до 1.0
-      const translateZ = normalizedDistance * normalizedDistance * -50; // Легкая глубина
 
-      card.style.transform = `translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`;
-      card.style.transformOrigin = 'center center';
+      const distanceFromCenter = cardCenterX - containerCenterX;
+      const progress = distanceFromCenter / maxDistance; // -1 .. 1
+      const direction = Math.sign(progress) || 0;
+      const normalizedDistance = Math.min(1, Math.abs(progress));
+      const curveFactor = Math.pow(normalizedDistance, 1.1);
+
+      const translateY = curveFactor * 180; // опускаем боковые карточки сильнее
+      const translateZ = -curveFactor * 160; // уводим назад по оси Z
+      const rotateY = progress * 12; // лёгкий поворот к центру
+      const rotateZ = direction * curveFactor * 14; // наклон вокруг оси Z
+      const rotateX = -curveFactor * 7; // чуть заваливаем назад
+      const scale = 1 - curveFactor * 0.15; // центральная — крупнее
+
+      card.style.transform = `translate3d(0, ${translateY}px, ${translateZ}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) scale(${scale})`;
+      card.style.transformOrigin = 'center top';
+      card.style.zIndex = String(Math.round((1 - normalizedDistance) * 100));
     });
   };
 
-  // Простой animation loop
+  // Animation loop только при видимости, иначе стоп
   useEffect(() => {
-    const animate = () => {
-      updateCardTransforms();
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
-    
-    animate();
-    
-    const handleResize = () => {
-      updateCardTransforms();
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+    const start = () => {
+      if (animationFrameRef.current == null) {
+        const animate = () => {
+          updateCardTransforms();
+          animationFrameRef.current = requestAnimationFrame(animate);
+        };
+        animationFrameRef.current = requestAnimationFrame(animate);
       }
+    };
+    const stop = () => {
+      if (animationFrameRef.current != null) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+    const el = containerRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      const vis = entries[0]?.isIntersecting;
+      if (vis) start(); else stop();
+    }, { threshold: 0.05 });
+    io.observe(el);
+    const handleResize = () => updateCardTransforms();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      io.disconnect();
       window.removeEventListener('resize', handleResize);
+      stop();
     };
   }, [collections]);
 
@@ -195,28 +211,28 @@ export default function CollectionsCarousel({ collections }: CollectionsCarousel
   };
 
   return (
-    <div className="w-full" style={{ 
-      position: 'relative', 
-      overflow: 'visible',
-      perspective: '1200px',
-      transformStyle: 'preserve-3d',
-      paddingTop: '100px',
-      paddingBottom: '100px',
-      marginTop: '-100px',
-      marginBottom: '-100px',
-    }}>
-      <div 
+    <div
+      className="w-full"
+      style={{
+        position: 'relative',
+        overflow: 'visible',
+        perspective: '1400px',
+        transformStyle: 'preserve-3d',
+        paddingTop: '160px',
+        paddingBottom: '160px',
+        marginTop: '-160px',
+        marginBottom: '-160px',
+      }}
+    >
+      <div
         ref={containerRef}
-        className={`flex gap-6 md:gap-8 lg:gap-8 px-8 md:px-16 lg:px-[64px] scrollbar-hide collections-carousel ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`px-8 md:px-16 lg:px-[64px] scrollbar-hide collections-carousel ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{
-          gap: '32px',
           scrollBehavior: 'auto',
           WebkitOverflowScrolling: 'touch',
           userSelect: 'none',
           overflowX: 'auto',
-          overflowY: 'visible',
-          display: 'flex',
-          alignItems: 'center',
+          overflowY: 'hidden',
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -226,7 +242,17 @@ export default function CollectionsCarousel({ collections }: CollectionsCarousel
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-      {collections.map((collection, index) => (
+        <div
+          className="flex gap-6 md:gap-8 lg:gap-8 w-max"
+          style={{
+            gap: '32px',
+            alignItems: 'flex-start',
+            overflow: 'visible',
+            paddingTop: '80px',
+            paddingBottom: '80px',
+          }}
+        >
+        {collections.map((collection, index) => (
         <div
           key={collection.id}
           ref={(el) => { cardsRef.current[index] = el; }}
@@ -290,6 +316,7 @@ export default function CollectionsCarousel({ collections }: CollectionsCarousel
           )}
         </div>
       ))}
+        </div>
       </div>
     </div>
   );
